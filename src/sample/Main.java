@@ -1,6 +1,7 @@
 package sample;
 
 import javafx.application.Application;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -14,10 +15,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import sample.bytes.SocketClient;
 
 import java.io.*;
-import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class Main extends Application {
@@ -34,11 +34,9 @@ public class Main extends Application {
     private TextField ipAddressField = new TextField("127.0.0.1");
     //接受port的单行文本框
     private TextField ipPortField = new TextField("8008");
+    private static SocketClient socketClient;
 
-//    private static TCPClient tcpClient;
-
-
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage) throws IOException {
         BorderPane mainPane = new BorderPane();
         //输入区域
         VBox vBox = setVBoxArea();
@@ -49,18 +47,28 @@ public class Main extends Application {
         //顶部ip相关区域
         HBox hBox1 = setTopIpArea();
         mainPane.setTop(hBox1);
-
         btnExitAction();
         btnSendAction();
         btnOpenAction(primaryStage);
         btnSaveAction(primaryStage);
-//        btnConnectAction();
-
+        btnConnectAction();
         Scene scene = new Scene(mainPane, 700, 400);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
-
+    private void btnConnectAction() throws IOException {
+        btnConnect.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                try {
+                    socketClient = new SocketClient("127.0.0.1",8008);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+//        socketClient = new SocketClient("172.16.229.253", 8008);
+    }
     private void btnSaveAction(Stage primaryStage) {
         new Thread(new Runnable() {
             @Override
@@ -127,37 +135,16 @@ public class Main extends Application {
                 btnSend.setOnMouseClicked(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent mouseEvent) {
-                        String message = inputField.getText();
-                        if (message.trim().equals("")) {
-                            message = receiveArea.getText();
-                        }
-                        String ip = ipAddressField.getText();
-                        String port = ipPortField.getText();
-                        if (ip.equals("") || port.equals("")) {
-                            receiveArea.setText("请输入正确的ip地址！");
-                            return;
-                        }
+                        String content = inputField.getText();
+                        socketClient.send(content);
+                        String receive = null;
                         try {
-                            Socket socket = new Socket(ip, Integer.parseInt(port));
-                            //发消息到到服务器
-                            socket.getOutputStream().write(message.getBytes(StandardCharsets.UTF_8));
-                            socket.shutdownOutput();
-
-                            //接受服务器消息
-                            InputStream inputStream = socket.getInputStream();
-                            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(new BufferedInputStream(inputStream)));
-                            StringBuilder stringBuilder = new StringBuilder();
-                            String line = null;
-                            while ((line = bufferedReader.readLine()) != null) {
-                                stringBuilder.append(line);
-                            }
-//
-                            receiveArea.setText(stringBuilder.toString());
-                            socket.shutdownInput();
-                            socket.close();
+                            receive = socketClient.receive();
+                            System.out.println(receive);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+                        receiveArea.appendText(receive);
                     }
                 });
             }
@@ -171,6 +158,11 @@ public class Main extends Application {
                 btnExit.setOnMouseClicked(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent mouseEvent) {
+                        try {
+                            socketClient.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         System.exit(0);
                     }
                 });
@@ -185,8 +177,8 @@ public class Main extends Application {
         Label ipPortLabel = new Label("端口");
         ipPortLabel.setLabelFor(ipPortField);
         ipPortLabel.setAlignment(Pos.BASELINE_CENTER);
-//        btnConnect = new Button("连接");
-        hBox1.getChildren().addAll(ipAddressLabel, ipAddressField, ipPortLabel, ipPortField);
+        btnConnect = new Button("连接");
+        hBox1.getChildren().addAll(ipAddressLabel, ipAddressField, ipPortLabel, ipPortField, btnConnect);
         hBox1.setAlignment(Pos.BOTTOM_CENTER);
         hBox1.setSpacing(15);
         hBox1.setPadding(new Insets(20, 20, 0, 20));
