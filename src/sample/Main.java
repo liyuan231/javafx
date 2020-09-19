@@ -1,6 +1,7 @@
 package sample;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -56,12 +57,13 @@ public class Main extends Application {
         primaryStage.setScene(scene);
         primaryStage.show();
     }
+
     private void btnConnectAction() throws IOException {
         btnConnect.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
                 try {
-                    socketClient = new SocketClient("127.0.0.1",8008);
+                    socketClient = new SocketClient("127.0.0.1", 8008);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -69,6 +71,7 @@ public class Main extends Application {
         });
 //        socketClient = new SocketClient("172.16.229.253", 8008);
     }
+
     private void btnSaveAction(Stage primaryStage) {
         new Thread(new Runnable() {
             @Override
@@ -138,13 +141,32 @@ public class Main extends Application {
                         String content = inputField.getText();
                         socketClient.send(content);
                         String receive = null;
-                        try {
-                            receive = socketClient.receive();
-                            System.out.println(receive);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        receiveArea.appendText(receive);
+                        Thread readThread = new Thread(() -> {
+                            String message = null;
+                            try {
+                                while ((message = socketClient.receive()) != null) {
+                                    String finalMessage = message;
+                                    Platform.runLater(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            receiveArea.appendText(finalMessage);
+                                        }
+                                    });
+                                }
+                                Platform.runLater(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        receiveArea.appendText("对话已关闭！");
+                                    }
+                                });
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        });
+                        readThread.start();
+//                            receive = socketClient.receive();
+//                        System.out.println(receive);
+//                        receiveArea.appendText(receive);
                     }
                 });
             }

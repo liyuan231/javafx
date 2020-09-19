@@ -21,13 +21,13 @@ public class SocketServer {
                 @Override
                 public void run() {
                     try {
-                        printWriter.println("欢迎！！！");
-//                        printWriter.write(String.valueOf("欢迎！"));
+                        printWriter.write(String.valueOf("欢迎！"));
 //                        printWriter.write();
 //                        bufferedWriter.flush();
                         String line;
                         while ((line = bufferedReader.readLine()) != null) {
                             System.out.println(line);
+                            printWriter.println("服务器重发！！");
                             printWriter.println("[LIYUAN]" + line);
 //                            printWriter.flush();
                         }

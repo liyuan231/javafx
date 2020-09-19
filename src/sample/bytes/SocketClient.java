@@ -15,7 +15,8 @@ public class SocketClient {
         socket = new Socket(ip, port);
         printWriter = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
         bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        System.out.println(bufferedReader.readLine());
+//        receive();
+//        System.out.println(bufferedReader.readLine());
     }
 
     public void send(String message) {
