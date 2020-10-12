@@ -38,6 +38,7 @@ public class Main extends Application {
     private static SocketClient socketClient;
 
     public void start(Stage primaryStage) throws IOException {
+        primaryStage.setTitle("登录查看成绩");
         BorderPane mainPane = new BorderPane();
         //输入区域
         VBox vBox = setVBoxArea();
