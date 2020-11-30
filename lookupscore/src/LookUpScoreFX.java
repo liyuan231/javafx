@@ -35,7 +35,7 @@ public class LookUpScoreFX extends Application {
     //显示信息的文本区域
     private final TextArea receiveArea = new TextArea();
     //接受ip地址的单行文本框
-    private final TextField ipAddressField = new TextField("172.16.229.253");
+    private final TextField ipAddressField = new TextField("202.116.195.71");
     //接受port的单行文本框
     private final TextField ipPortField = new TextField("9009");
     //    private static TCPClient tcpClient;
